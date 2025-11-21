@@ -10,7 +10,7 @@ import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DisplayName("Тесты на BankController")
-public class BankControllerTest extends TestBase {
+public class BankControllerTests extends TestBase {
 
     @Test
     @DisplayName("Успешное получение списка всех пользователей ")
