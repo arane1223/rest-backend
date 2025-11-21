@@ -23,9 +23,4 @@ public class RestBackendApplication {
 				.paths(PathSelectors.any())
 				.build();
 	}
-
-//	@Bean
-//	public ObjectMapper jacksonMapper() {
-//		return new ObjectMapper().setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE);
-//	}
 }
