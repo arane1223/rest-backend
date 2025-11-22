@@ -3,6 +3,7 @@ package guru.qa.restbackend.controller;
 import guru.qa.restbackend.domain.LoginInfo;
 import guru.qa.restbackend.domain.UserInfo;
 import guru.qa.restbackend.exception.InvalidUsernameException;
+import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -15,6 +16,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
+@Api(tags = "User Management", description = "Управление пользователями")
 public class BankController {
 
     private Map<String, UserInfo> users = Map.of(
@@ -24,7 +26,7 @@ public class BankController {
     );
 
     @PostMapping("user/login")
-    @ApiOperation("Авторизация")
+    @ApiOperation("Авторизация пользователя")
     public UserInfo doLogin(@RequestBody LoginInfo loginInfo) {
         if (loginInfo.getUserName().equals("Sergey")) {
             return UserInfo.builder()
