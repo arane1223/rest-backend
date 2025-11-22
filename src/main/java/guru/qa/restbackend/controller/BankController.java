@@ -32,7 +32,7 @@ public class BankController {
                     .userName(loginInfo.getUserName())
                     .build();
         } else {
-            throw new InvalidUsernameException();
+            throw new InvalidUsernameException(loginInfo.getUserName());
         }
     }
 

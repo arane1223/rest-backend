@@ -46,11 +46,11 @@ public class BankControllerTests extends TestBase {
                 .body(INCORRECT_AUTH_DATA)
                 .post("user/login")
                 .then()
-                .spec(baseRespSpec(500))
+                .spec(baseRespSpec(401))
                 .extract()
                 .response();
 
-        assertThat(response.path("status").toString()).isEqualTo("500");
-        assertThat(response.path("error").toString()).isEqualTo("Internal Server Error");
+        assertThat(response.path("status").toString()).isEqualTo("401");
+        assertThat(response.path("error").toString()).isEqualTo("Unauthorized");
     }
 }
