@@ -1,9 +1,12 @@
 package guru.qa.restbackend.service;
 
+import guru.qa.restbackend.data.TestDataInitializer;
 import guru.qa.restbackend.domain.*;
 import guru.qa.restbackend.exception.*;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -25,6 +28,54 @@ public class PaymentService {
     // Генераторы ID
     private final AtomicLong accountIdGenerator = new AtomicLong(1);
     private final AtomicLong transactionIdGenerator = new AtomicLong(1);
+
+    // Инициализатор тестовых данных
+    private final TestDataInitializer testDataInitializer;
+
+    @Autowired
+    public PaymentService(TestDataInitializer testDataInitializer) {
+        this.testDataInitializer = testDataInitializer;
+    }
+
+    /**
+     * Инициализация тестовых данных при старте приложения.
+     * Выполняется автоматически после создания bean.
+     */
+    @PostConstruct
+    public void initTestData() {
+        if (accounts.isEmpty()) {
+            loadTestData();
+        }
+    }
+
+    /**
+     * Загрузка тестовых данных из TestDataInitializer.
+     */
+    private void loadTestData() {
+        // Загружаем счета
+        List<Account> testAccounts = testDataInitializer.createTestAccounts();
+        testAccounts.forEach(account -> {
+            accounts.put(account.getId(), account);
+            // Обновляем генератор ID до максимального + 1
+            if (account.getId() >= accountIdGenerator.get()) {
+                accountIdGenerator.set(account.getId() + 1);
+            }
+        });
+
+        // Загружаем транзакции
+        List<Transaction> testTransactions = testDataInitializer.createTestTransactions();
+        testTransactions.forEach(transaction -> {
+            transactions.put(transaction.getId(), transaction);
+            // Обновляем генератор ID до максимального + 1
+            if (transaction.getId() >= transactionIdGenerator.get()) {
+                transactionIdGenerator.set(transaction.getId() + 1);
+            }
+        });
+
+        System.out.println("✅ Тестовые данные успешно загружены:");
+        System.out.println("   - " + accounts.size() + " счетов создано");
+        System.out.println("   - " + transactions.size() + " транзакций добавлено");
+    }
 
     /**
      * Создание нового счета.
@@ -232,7 +283,7 @@ public class PaymentService {
      * Обновление статуса счета.
      *
      * @param accountId ID счета
-     * @param request новый статус
+     * @param request   новый статус
      * @return обновленный счет
      */
     public Account updateAccountStatus(Long accountId, UpdateAccountStatusRequest request) {
@@ -258,7 +309,7 @@ public class PaymentService {
      * Обновление владельца счета.
      *
      * @param accountId ID счета
-     * @param request новое имя владельца
+     * @param request   новое имя владельца
      * @return обновленный счет
      */
     public Account updateAccountOwner(Long accountId, UpdateAccountOwnerRequest request) {
