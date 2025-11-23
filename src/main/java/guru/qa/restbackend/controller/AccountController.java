@@ -115,4 +115,42 @@ public class AccountController {
 
         return ResponseEntity.ok(transactions);
     }
+
+    @PutMapping("/{id}/status")
+    @ApiOperation(value = "Изменить статус счета",
+            notes = "Позволяет заблокировать, активировать или закрыть счет")
+    public ResponseEntity<Account> updateAccountStatus(
+            @ApiParam(value = "ID счета", required = true, example = "1")
+            @PathVariable Long id,
+            @ApiParam(value = "Новый статус", required = true)
+            @RequestBody @Valid UpdateAccountStatusRequest request) {
+
+        Account account = paymentService.updateAccountStatus(id, request);
+        return ResponseEntity.ok(account);
+    }
+
+    @PatchMapping("/{id}/owner")
+    @ApiOperation(value = "Изменить владельца счета",
+            notes = "Обновляет имя владельца счета")
+    public ResponseEntity<Account> updateAccountOwner(
+            @ApiParam(value = "ID счета", required = true, example = "1")
+            @PathVariable Long id,
+            @ApiParam(value = "Новое имя владельца", required = true)
+            @RequestBody @Valid UpdateAccountOwnerRequest request) {
+
+        Account account = paymentService.updateAccountOwner(id, request);
+        return ResponseEntity.ok(account);
+    }
+
+    @DeleteMapping("/{id}")
+    @ApiOperation(value = "Удалить счет",
+            notes = "Закрывает счет. Баланс должен быть равен нулю.")
+    public ResponseEntity<Void> deleteAccount(
+            @ApiParam(value = "ID счета", required = true, example = "1")
+            @PathVariable Long id) {
+
+        paymentService.deleteAccount(id);
+        return ResponseEntity.noContent().build();  // 204 No Content
+    }
+
 }

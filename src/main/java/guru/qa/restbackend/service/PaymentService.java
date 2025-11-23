@@ -228,6 +228,76 @@ public class PaymentService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Обновление статуса счета.
+     *
+     * @param accountId ID счета
+     * @param request новый статус
+     * @return обновленный счет
+     */
+    public Account updateAccountStatus(Long accountId, UpdateAccountStatusRequest request) {
+        Account account = getAccount(accountId);
+
+        // Проверка: нельзя повторно закрыть уже закрытый счет
+        if (account.getStatus() == AccountStatus.CLOSED &&
+                request.getStatus() == AccountStatus.CLOSED) {
+            throw new AccountAlreadyClosedException(accountId);
+        }
+
+        // Проверка: при закрытии счета баланс должен быть нулевым
+        if (request.getStatus() == AccountStatus.CLOSED &&
+                account.getBalance().compareTo(BigDecimal.ZERO) != 0) {
+            throw new AccountHasBalanceException(accountId);
+        }
+
+        account.setStatus(request.getStatus());
+        return account;
+    }
+
+    /**
+     * Обновление владельца счета.
+     *
+     * @param accountId ID счета
+     * @param request новое имя владельца
+     * @return обновленный счет
+     */
+    public Account updateAccountOwner(Long accountId, UpdateAccountOwnerRequest request) {
+        Account account = getAccount(accountId);
+
+        // Проверка: нельзя изменять владельца закрытого счета
+        if (account.getStatus() == AccountStatus.CLOSED) {
+            throw new AccountAlreadyClosedException(accountId);
+        }
+
+        account.setOwnerName(request.getOwnerName());
+        return account;
+    }
+
+    /**
+     * Удаление (закрытие) счета.
+     * Счет можно удалить только если:
+     * - баланс равен нулю
+     * - статус не CLOSED
+     *
+     * @param accountId ID счета
+     */
+    public void deleteAccount(Long accountId) {
+        Account account = getAccount(accountId);
+
+        // Проверка: нельзя удалить счет с деньгами
+        if (account.getBalance().compareTo(BigDecimal.ZERO) != 0) {
+            throw new AccountHasBalanceException(accountId);
+        }
+
+        // Проверка: нельзя удалить уже закрытый счет
+        if (account.getStatus() == AccountStatus.CLOSED) {
+            throw new AccountAlreadyClosedException(accountId);
+        }
+
+        // Помечаем счет как закрытый (не удаляем физически для сохранения истории)
+        account.setStatus(AccountStatus.CLOSED);
+    }
+
     // ========== ПРИВАТНЫЕ ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ ==========
 
     /**
