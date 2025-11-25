@@ -424,13 +424,15 @@ public class AccountControllerTests extends TestBase {
         Response response = given(baseReqSpec)
                 .body(TEST_TRANSFER_ON_SAME_ACCOUNT_REQUEST_DATA)
                 .when()
-                .post("")
+                .post("/account/transfer")
                 .then()
                 .spec(baseRespSpec(400))
                 .extract().response();
 
         assertThat(getStatusCodeFromResponse(response)).isEqualTo(400);
         assertThat(response.path("error").toString()).isEqualTo("Bad Request");
+        assertThat(response.path("message").toString())
+                .isEqualTo("Нельзя перевести деньги на тот же счет");
     }
 
     //400 - удаление счета с ненулевым балансом
