@@ -5,11 +5,11 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static guru.qa.restbackend.specs.BaseSpecs.*;
-import static guru.qa.restbackend.tests.TestData.*;
+import static guru.qa.restbackend.data.TestData.*;
 import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
 
-@DisplayName("Тесты на BankController")
+@DisplayName("Тесты на проверку управления пользователями")
 public class BankControllerTests extends TestBase {
 
     @Test

@@ -18,7 +18,7 @@ public class TestDataInitializer {
     /**
      * Создает список тестовых счетов с различными характеристиками.
      *
-     * @return список из 5 предзаполненных счетов
+     * @return список из 7 предзаполненных счетов
      */
     public List<Account> createTestAccounts() {
         List<Account> accounts = new ArrayList<>();
@@ -78,13 +78,35 @@ public class TestDataInitializer {
                 .ownerName("Test User")
                 .build());
 
+        // Счет 6: Активный счет Ivan с балансом 1500 USD для тестирования переводов (отправитель)
+        accounts.add(Account.builder()
+                .id(6L)
+                .accountNumber("40817810000000000006")
+                .balance(new BigDecimal("1500.00"))
+                .currency("USD")
+                .status(AccountStatus.ACTIVE)
+                .createdAt(LocalDateTime.now().minusDays(7))
+                .ownerName("Ivan Sidorov")
+                .build());
+
+        // Счет 7: Активный счет Maria с балансом 500 USD для тестирования переводов (получатель)
+        accounts.add(Account.builder()
+                .id(7L)
+                .accountNumber("40817810000000000007")
+                .balance(new BigDecimal("500.00"))
+                .currency("USD")
+                .status(AccountStatus.ACTIVE)
+                .createdAt(LocalDateTime.now().minusDays(3))
+                .ownerName("Maria Volkova")
+                .build());
+
         return accounts;
     }
 
     /**
      * Создает список тестовых транзакций между счетами.
      *
-     * @return список из 4 предзаполненных транзакций
+     * @return список из 5 предзаполненных транзакций
      */
     public List<Transaction> createTestTransactions() {
         List<Transaction> transactions = new ArrayList<>();
@@ -134,6 +156,18 @@ public class TestDataInitializer {
                 .toAccountId(null)
                 .timestamp(LocalDateTime.now().minusDays(10))
                 .description("Снятие наличных")
+                .status(TransactionStatus.SUCCESS)
+                .build());
+
+        // Транзакция 5: Перевод со счета 6 на счет 7 для демонстрации
+        transactions.add(Transaction.builder()
+                .id(5L)
+                .type(TransactionType.TRANSFER)
+                .amount(new BigDecimal("300.00"))
+                .fromAccountId(6L)
+                .toAccountId(7L)
+                .timestamp(LocalDateTime.now().minusDays(2))
+                .description("Переводит друга")
                 .status(TransactionStatus.SUCCESS)
                 .build());
 
