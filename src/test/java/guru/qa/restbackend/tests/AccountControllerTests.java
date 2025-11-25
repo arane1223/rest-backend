@@ -16,9 +16,8 @@ import static guru.qa.restbackend.domain.AccountStatus.*;
 import static guru.qa.restbackend.domain.TransactionStatus.SUCCESS;
 import static guru.qa.restbackend.domain.TransactionType.DEPOSIT;
 import static guru.qa.restbackend.helpers.ResponseHelpers.*;
-import static guru.qa.restbackend.specs.BaseSpecs.*;
+import static guru.qa.restbackend.helpers.TestApiHelper.*;
 import static guru.qa.restbackend.utils.RandomUtils.*;
-import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DisplayName("Тесты на проверку управления банковскими счетами ")
@@ -31,13 +30,7 @@ public class AccountControllerTests extends TestBase {
     void successfulCreateAccountTest() {
         CreateAccountRequest newAccountDataForTest = generateNewAccountData();
 
-        Response response = given(baseReqSpec)
-                .body(newAccountDataForTest)
-                .when()
-                .post("/account/create")
-                .then()
-                .spec(baseRespSpec(201))
-                .extract().response();
+        Response response = executePost("/account/create", newAccountDataForTest, 201);
 
         assertThat(getBalanceFromResponse(response)).isEqualByComparingTo("0");
         assertThat(getAccountStatusFromResponse(response)).isEqualTo(ACTIVE);
@@ -59,11 +52,7 @@ public class AccountControllerTests extends TestBase {
     @DisplayName("Успешное получение счета по ID")
     @ParameterizedTest(name = "Получение счета для ID {0}")
     void successfulGetAccountParameterizedTest(String id, Account account) {
-        Response response = given(baseReqSpec)
-                .get("/account/" + id)
-                .then()
-                .spec(baseRespSpec(200))
-                .extract().response();
+        Response response = executeGet("/account/{id}", id, 200);
 
         assertThat(getAccountIdAsLong(response)).isEqualTo(account.getId());
         assertThat(response.jsonPath().getString("accountNumber")).isEqualTo(account.getAccountNumber());
@@ -78,11 +67,7 @@ public class AccountControllerTests extends TestBase {
     @Test
     @DisplayName("Успешное получение всех счетов")
     void successfulGetAllAccountsTest() {
-        Response response = given(baseReqSpec)
-                .get("/account/all")
-                .then()
-                .spec(baseRespSpec(200))
-                .extract().response();
+        Response response = executeGet("/account/all", 200);
 
         assertThat(response.jsonPath().getList("id").size()).isGreaterThan(0);
     }
@@ -101,11 +86,7 @@ public class AccountControllerTests extends TestBase {
     @DisplayName("Успешное получение баланса по ID")
     @ParameterizedTest(name = "Получение счета для ID {0}")
     void successfulGetBalanceByIdParameterizedTest(String id, Account account) {
-        String response = given(baseReqSpec)
-                .get("/account/{id}/balance", id)
-                .then()
-                .spec(baseRespSpec(200))
-                .extract().response().asString();
+        String response = executeGet("/account/{id}/balance", id, 200).asString();
 
         assertThat(response).isEqualTo(account.getBalance().toString());
     }
@@ -114,25 +95,13 @@ public class AccountControllerTests extends TestBase {
     @Test
     @DisplayName("Успешное удаление тестового счета по ID5")
     void successfulTestAccountDelete() {
-        Response firstResponse = given(baseReqSpec)
-                .get("/account/5")
-                .then()
-                .spec(baseRespSpec(200))
-                .extract().response();
+        Response firstResponse = executeGet("/account/5", 200);
 
         assertThat(getBalanceFromResponse(firstResponse)).isEqualByComparingTo("0");
 
-        given(baseReqSpec)
-                .delete("/account/5")
-                .then()
-                .spec(baseRespSpec(204))
-                .extract().response();
+        executeDelete("/account/5", 204);
 
-        Response afterDeleteResponse = given(baseReqSpec)
-                .get("/account/5")
-                .then()
-                .spec(baseRespSpec(200))
-                .extract().response();
+        Response afterDeleteResponse = executeGet("/account/5", 200);
 
         assertThat(getAccountStatusFromResponse(afterDeleteResponse)).isEqualTo(CLOSED);
     }
@@ -145,26 +114,14 @@ public class AccountControllerTests extends TestBase {
         TransactionRequest addFundsRequest = new TransactionRequest(
                 new BigDecimal(getRandomAmount()), "Add funds");
 
-        Response addAccountResponse = given(baseReqSpec)
-                .body(newAccountDataForTest)
-                .when()
-                .post("/account/create")
-                .then()
-                .spec(baseRespSpec(201))
-                .extract().response();
+        Response addAccountResponse = executePost("/account/create", newAccountDataForTest, 201);
 
         assertThat(getBalanceFromResponse(addAccountResponse)).isEqualByComparingTo("0");
         assertThat(getAccountStatusFromResponse(addAccountResponse)).isEqualTo(ACTIVE);
 
         String userId = getAccountId(addAccountResponse);
 
-        Response addFundsResponse = given(baseReqSpec)
-                .body(addFundsRequest)
-                .when()
-                .post("/account/{id}/deposit", userId)
-                .then()
-                .spec(baseRespSpec(201))
-                .extract().response();
+        Response addFundsResponse = executePost("/account/{id}/deposit", userId, addFundsRequest, 201);
 
         assertThat(getTransactionTypeFromResponse(addFundsResponse)).isEqualTo(DEPOSIT);
         assertThat(getAmountFromResponse(addFundsResponse))
@@ -183,39 +140,18 @@ public class AccountControllerTests extends TestBase {
         TransactionRequest withdrawFundsRequest = new TransactionRequest(
                 new BigDecimal(addFundsRequest.getAmount().intValue() - 500), "Withdraw funds");
 
-        Response addAccountResponse = given(baseReqSpec)
-                .body(newAccountDataForTest)
-                .when()
-                .post("/account/create")
-                .then()
-                .spec(baseRespSpec(201))
-                .extract().response();
+        Response addAccountResponse = executePost("/account/create", newAccountDataForTest, 201);
 
         String testAccountId = getAccountId(addAccountResponse);
 
-        Response addFundsResponse = given(baseReqSpec)
-                .body(addFundsRequest)
-                .when()
-                .post("/account/{id}/deposit", testAccountId)
-                .then()
-                .spec(baseRespSpec(201))
-                .extract().response();
+        Response addFundsResponse = executePost("/account/{id}/deposit", testAccountId, addFundsRequest, 201);
 
         assertThat(getAmountFromResponse(addFundsResponse))
                 .isEqualByComparingTo(addFundsRequest.getAmount());
 
-        given(baseReqSpec)
-                .body(withdrawFundsRequest)
-                .when()
-                .post("/account/{id}/withdraw", testAccountId)
-                .then()
-                .spec(baseRespSpec(201));
+        executePost("/account/{id}/withdraw", testAccountId, withdrawFundsRequest, 201);
 
-        Response accountResponse = given(baseReqSpec)
-                .get("/account/{id}", testAccountId)
-                .then()
-                .spec(baseRespSpec(200))
-                .extract().response();
+        Response accountResponse = executeGet("/account/{id}", testAccountId, 200);
 
         assertThat(getBalanceFromResponse(accountResponse).intValue()).isEqualTo(500);
         assertThat(getAccountStatusFromResponse(accountResponse)).isEqualTo(ACTIVE);
@@ -225,30 +161,15 @@ public class AccountControllerTests extends TestBase {
     @Test
     @DisplayName("Успешный перевод между счетами ID6 и ID7")
     void successfulTransferBetweenAccountsTest() {
-        String accountBalanceBeforeTransfer = given(baseReqSpec)
-                .get("/account/7/balance")
-                .then()
-                .spec(baseRespSpec(200))
-                .extract().response().asString();
+        String accountBalanceBeforeTransfer = executeGet("/account/7/balance", 200).asString();
 
         assertThat(accountBalanceBeforeTransfer).isEqualTo("500.00");
 
-        Response transferResponse = given(baseReqSpec)
-                .body(SUCCESS_TEST_TRANSFER_REQUEST_DATA)
-                .when()
-                .post("/account/transfer")
-                .then()
-                .spec(baseRespSpec(201))
-                .extract().response();
+        Response transferResponse = executePost("/account/transfer", SUCCESS_TEST_TRANSFER_REQUEST_DATA, 201);
 
-        assertThat(getTransactionStatusFromResponse(transferResponse))
-                .isEqualTo(SUCCESS);
+        assertThat(getTransactionStatusFromResponse(transferResponse)).isEqualTo(SUCCESS);
 
-        String accountBalanceAfterTransfer = given(baseReqSpec)
-                .get("/account/7/balance")
-                .then()
-                .spec(baseRespSpec(200))
-                .extract().response().asString();
+        String accountBalanceAfterTransfer = executeGet("/account/7/balance", 200).asString();
 
         assertThat(accountBalanceAfterTransfer).isEqualTo("1500.00");
     }
@@ -257,11 +178,7 @@ public class AccountControllerTests extends TestBase {
     @Test
     @DisplayName("Успешное получение истории транзакций по ID1")
     void successfulGettingAccountTransactionsByIdTest() {
-        Response response = given(baseReqSpec)
-                .get("/account/1/transactions")
-                .then()
-                .spec(baseRespSpec(200))
-                .extract().response();
+        Response response = executeGet("/account/1/transactions", 200);
 
         assertThat(response.jsonPath().getList("id").size()).isGreaterThanOrEqualTo(2);
     }
@@ -273,23 +190,12 @@ public class AccountControllerTests extends TestBase {
         CreateAccountRequest newAccountDataForTest = generateNewAccountData();
         UpdateAccountStatusRequest newAccountStatus = new UpdateAccountStatusRequest(CLOSED);
 
-        Response addAccountResponse = given(baseReqSpec)
-                .body(newAccountDataForTest)
-                .when()
-                .post("/account/create")
-                .then()
-                .spec(baseRespSpec(201))
-                .extract().response();
+        Response addAccountResponse = executePost("/account/create", newAccountDataForTest, 201);
 
         String testAccountId = getAccountId(addAccountResponse);
 
-        Response changeAccountStatusResponse = given(baseReqSpec)
-                .body(newAccountStatus)
-                .when()
-                .put("/account/{id}/status", testAccountId)
-                .then()
-                .spec(baseRespSpec(200))
-                .extract().response();
+        Response changeAccountStatusResponse = executePut(
+                "/account/{id}/status", testAccountId, newAccountStatus, 200);
 
         assertThat(getAccountStatusFromResponse(changeAccountStatusResponse))
                 .isEqualTo(CLOSED);
@@ -302,26 +208,15 @@ public class AccountControllerTests extends TestBase {
         CreateAccountRequest newAccountDataForTest = generateNewAccountData();
         UpdateAccountOwnerRequest newOwnerForTest = new UpdateAccountOwnerRequest(getRandomOwnerName());
 
-        Response addAccountResponse = given(baseReqSpec)
-                .body(newAccountDataForTest)
-                .when()
-                .post("/account/create")
-                .then()
-                .spec(baseRespSpec(201))
-                .extract().response();
+        Response addAccountResponse = executePost("/account/create", newAccountDataForTest, 201);
 
         assertThat(addAccountResponse.path("ownerName").toString())
                 .isEqualTo(newAccountDataForTest.getOwnerName());
 
         String testAccountId = getAccountId(addAccountResponse);
 
-        Response changeOwnerResponse = given(baseReqSpec)
-                .body(newOwnerForTest)
-                .when()
-                .patch("/account/{id}/owner", testAccountId)
-                .then()
-                .spec(baseRespSpec(200))
-                .extract().response();
+        Response changeOwnerResponse = executePatch(
+                "/account/{id}/owner", testAccountId, newOwnerForTest, 200);
 
         assertThat(changeOwnerResponse.path("ownerName").toString())
                 .isEqualTo(newOwnerForTest.getOwnerName());
@@ -334,11 +229,7 @@ public class AccountControllerTests extends TestBase {
     void successfulGetAccountTest() {
         String randomId = getRandomId();
 
-        Response response = given(baseReqSpec)
-                .get("/account/" + randomId)
-                .then()
-                .spec(baseRespSpec(404))
-                .extract().response();
+        Response response = executeGet("/account/{id}", randomId, 404);
 
         assertThat(getStatusCodeFromResponse(response)).isEqualTo(404);
         assertThat(response.path("error").toString()).isEqualTo("Not Found");
@@ -350,11 +241,8 @@ public class AccountControllerTests extends TestBase {
     @DisplayName("Неуспешное получение баланса по несуществующему ID, 404 - Not Found")
     void unsuccessfulGetBalanceByIdTest() {
         String randomId = getRandomId();
-        Response response = given(baseReqSpec)
-                .get("/account/{id}/balance", randomId)
-                .then()
-                .spec(baseRespSpec(404))
-                .extract().response();
+
+        Response response = executeGet("/account/{id}/balance", randomId, 404);
 
         assertThat(getStatusCodeFromResponse(response)).isEqualTo(404);
         assertThat(response.path("error").toString()).isEqualTo("Not Found");
@@ -369,26 +257,14 @@ public class AccountControllerTests extends TestBase {
         TransactionRequest withdrawFundsRequest = new TransactionRequest(
                 new BigDecimal(getRandomAmount()), "Some description");
 
-        Response addAccountResponse = given(baseReqSpec)
-                .body(newAccountDataForTest)
-                .when()
-                .post("/account/create")
-                .then()
-                .spec(baseRespSpec(201))
-                .extract().response();
+        Response addAccountResponse = executePost("/account/create", newAccountDataForTest, 201);
 
         assertThat(addAccountResponse.jsonPath().getString("ownerName"))
                 .isEqualTo(newAccountDataForTest.getOwnerName());
 
         String testAccountId = addAccountResponse.jsonPath().getString("id");
 
-        Response withdrawResponse = given(baseReqSpec)
-                .body(withdrawFundsRequest)
-                .when()
-                .post("/account/{id}/withdraw", testAccountId)
-                .then()
-                .spec(baseRespSpec(400))
-                .extract().response();
+        Response withdrawResponse = executePost("/account/{id}/withdraw", testAccountId, withdrawFundsRequest, 400);
 
         assertThat(getStatusCodeFromResponse(withdrawResponse)).isEqualTo(400);
         assertThat(withdrawResponse.path("error").toString()).isEqualTo("Bad Request");
@@ -404,13 +280,7 @@ public class AccountControllerTests extends TestBase {
         TransactionRequest withdrawFundsRequest = new TransactionRequest(
                 new BigDecimal(getRandomAmount()), "Some description");
 
-        Response response = given(baseReqSpec)
-                .body(withdrawFundsRequest)
-                .when()
-                .post("/account/4/withdraw")
-                .then()
-                .spec(baseRespSpec(403))
-                .extract().response();
+        Response response = executePost("/account/4/withdraw", withdrawFundsRequest, 403);
 
         assertThat(getStatusCodeFromResponse(response)).isEqualTo(403);
         assertThat(response.path("error").toString()).isEqualTo("Forbidden");
@@ -421,13 +291,8 @@ public class AccountControllerTests extends TestBase {
     @Test
     @DisplayName("Неуспешный перевод на тот же счет, 400 - Bad Request")
     void unsuccessfulTransferOnSameAccountTest() {
-        Response response = given(baseReqSpec)
-                .body(TEST_TRANSFER_ON_SAME_ACCOUNT_REQUEST_DATA)
-                .when()
-                .post("/account/transfer")
-                .then()
-                .spec(baseRespSpec(400))
-                .extract().response();
+        Response response = executePost(
+                "/account/transfer", TEST_TRANSFER_ON_SAME_ACCOUNT_REQUEST_DATA, 400);
 
         assertThat(getStatusCodeFromResponse(response)).isEqualTo(400);
         assertThat(response.path("error").toString()).isEqualTo("Bad Request");
@@ -437,13 +302,9 @@ public class AccountControllerTests extends TestBase {
 
     //400 - удаление счета с ненулевым балансом
     @Test
-    @DisplayName("Неуспешное удаление счета с ненулевым балансом, 400 - Bad Request")
+    @DisplayName("Неуспешное удаление счета ID1 с ненулевым балансом, 400 - Bad Request")
     void unsuccessfulDeleteAccountTest() {
-        Response response = given(baseReqSpec)
-                .delete("/account/1")
-                .then()
-                .spec(baseRespSpec(400))
-                .extract().response();
+        Response response = executeDelete("/account/1", 400);
 
         assertThat(getStatusCodeFromResponse(response)).isEqualTo(400);
         assertThat(response.path("error").toString()).isEqualTo("Bad Request");
@@ -454,11 +315,7 @@ public class AccountControllerTests extends TestBase {
     void unsuccessfulDeleteNonExistentAccountTest() {
         String randomId = getRandomId();
 
-        Response response = given(baseReqSpec)
-                .delete("/account/" + randomId)
-                .then()
-                .spec(baseRespSpec(404))
-                .extract().response();
+        Response response = executeDelete("/account/{id}", randomId, 404);
 
         assertThat(getStatusCodeFromResponse(response)).isEqualTo(404);
         assertThat(response.path("error").toString()).isEqualTo("Not Found");
@@ -471,11 +328,7 @@ public class AccountControllerTests extends TestBase {
     void unsuccessfulGettingAccountTransactionsByIdTest() {
         String randomId = getRandomId();
 
-        Response response = given(baseReqSpec)
-                .get("/account/{id}/transactions", randomId)
-                .then()
-                .spec(baseRespSpec(404))
-                .extract().response();
+        Response response = executeGet("/account/{id}/transactions", randomId, 404);
 
         assertThat(getStatusCodeFromResponse(response)).isEqualTo(404);
         assertThat(response.path("error").toString()).isEqualTo("Not Found");
