@@ -1,9 +1,9 @@
 package guru.qa.restbackend.tests;
 
 import guru.qa.restbackend.domain.*;
+import io.qameta.allure.*;
 import io.restassured.response.Response;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -21,10 +21,13 @@ import static guru.qa.restbackend.utils.RandomUtils.*;
 import static io.qameta.allure.Allure.step;
 import static org.assertj.core.api.Assertions.assertThat;
 
+@Owner("sergeyglukhov")
+@Feature("Account Management")
 @DisplayName("Тесты на проверку управления банковскими счетами ")
 public class AccountControllerTests extends TestBase {
 
     @Test
+    @Story("Создание счета")
     @DisplayName("Успешное создание нового счета")
     void successfulCreateAccountTest() {
         CreateAccountRequest newAccountDataForTest = generateNewAccountData();
@@ -50,6 +53,7 @@ public class AccountControllerTests extends TestBase {
     }
 
     @MethodSource
+    @Story("Получение счета")
     @DisplayName("Успешное получение счета по ID")
     @ParameterizedTest(name = "Получение счета для ID {0}")
     void successfulGetAccountParameterizedTest(String id, Account account) {
@@ -68,6 +72,7 @@ public class AccountControllerTests extends TestBase {
     }
 
     @Test
+    @Story("Получение счета")
     @DisplayName("Успешное получение всех счетов")
     void successfulGetAllAccountsTest() {
         Response response = step("Отправить запрос на получение всех счетов по ID", () ->
@@ -87,6 +92,7 @@ public class AccountControllerTests extends TestBase {
     }
 
     @MethodSource
+    @Story("Получение баланса")
     @DisplayName("Успешное получение баланса по ID")
     @ParameterizedTest(name = "Получение баланса для счета с ID {0}")
     void successfulGetBalanceByIdParameterizedTest(String id, Account account) {
@@ -98,6 +104,7 @@ public class AccountControllerTests extends TestBase {
     }
 
     @Test
+    @Story("Удаление счета")
     @DisplayName("Успешное удаление тестового счета по ID5")
     void successfulTestAccountDelete() {
         Response firstResponse = step("Отправить запрос на получение счета по ID5", () ->
@@ -117,6 +124,7 @@ public class AccountControllerTests extends TestBase {
     }
 
     @Test
+    @Story("Пополнение счета")
     @DisplayName("Успешное пополнение счета")
     void successfulAddingFundsToAccountTest() {
         CreateAccountRequest newAccountDataForTest = generateNewAccountData();
@@ -146,6 +154,7 @@ public class AccountControllerTests extends TestBase {
     }
 
     @Test
+    @Story("Снятие денег со счета")
     @DisplayName("Успешное снятие денег при положительном балансе")
     void successfulWithdrawingMoneyTest() {
         CreateAccountRequest newAccountDataForTest = generateNewAccountData();
@@ -181,6 +190,7 @@ public class AccountControllerTests extends TestBase {
     }
 
     @Test
+    @Story("Переводы")
     @DisplayName("Успешный перевод между счетами ID6 и ID7")
     void successfulTransferBetweenAccountsTest() {
         String accountBalanceBeforeTransfer = step("Отправить запрос на получение баланса до перевода", () ->
@@ -203,6 +213,7 @@ public class AccountControllerTests extends TestBase {
     }
 
     @Test
+    @Story("Получение истории транзакций")
     @DisplayName("Успешное получение истории транзакций по ID1")
     void successfulGettingAccountTransactionsByIdTest() {
         Response response = step("Отправить запрос на получение истории транзакций", () ->
@@ -213,6 +224,7 @@ public class AccountControllerTests extends TestBase {
     }
 
     @Test
+    @Story("Изменение статуса счета")
     @DisplayName("Успешное изменение статуса счета")
     void successfulChangingAccountStatusTest() {
         CreateAccountRequest newAccountDataForTest = generateNewAccountData();
@@ -233,6 +245,7 @@ public class AccountControllerTests extends TestBase {
     }
 
     @Test
+    @Story("Изменение владельца счета")
     @DisplayName("Успешное изменение владельца счета счета")
     void successfulChangingAccountOwnerTest() {
         CreateAccountRequest newAccountDataForTest = generateNewAccountData();
@@ -258,6 +271,7 @@ public class AccountControllerTests extends TestBase {
     }
 
     @Test
+    @Story("Получение счета")
     @DisplayName("Неуспешное получение счета по ID, 404 - Not Found")
     void successfulGetAccountTest() {
         String randomId = getRandomId();
@@ -274,6 +288,7 @@ public class AccountControllerTests extends TestBase {
     }
 
     @Test
+    @Story("Получение баланса")
     @DisplayName("Неуспешное получение баланса по несуществующему ID, 404 - Not Found")
     void unsuccessfulGetBalanceByIdTest() {
         String randomId = getRandomId();
@@ -290,6 +305,7 @@ public class AccountControllerTests extends TestBase {
     }
 
     @Test
+    @Story("Снятие денег со счета")
     @DisplayName("Неуспешное снятие денег, с нулевым балансом, 400 - Bad Request")
     void unsuccessfulWithdrawingMoneyTest() {
         CreateAccountRequest newAccountDataForTest = generateNewAccountData();
@@ -316,8 +332,8 @@ public class AccountControllerTests extends TestBase {
         });
     }
 
-    //403 - счет заблокирован
     @Test
+    @Story("Снятие денег со счета")
     @DisplayName("Неуспешное снятие денег с заблокированного счета, 403 - Forbidden")
     void unsuccessfulWithdrawingMoneyOnBlockedAccountTest() {
         TransactionRequest withdrawFundsRequest = step("Подготовить тело запроса на снятие денег", () ->
@@ -334,6 +350,7 @@ public class AccountControllerTests extends TestBase {
     }
 
     @Test
+    @Story("Переводы")
     @DisplayName("Неуспешный перевод на тот же счет, 400 - Bad Request")
     void unsuccessfulTransferOnSameAccountTest() {
         Response response = step("Отправить запрос на перевод денег на тот же счет", () ->
@@ -348,6 +365,7 @@ public class AccountControllerTests extends TestBase {
     }
 
     @Test
+    @Story("Удаление счета")
     @DisplayName("Неуспешное удаление счета ID1 с ненулевым балансом, 400 - Bad Request")
     void unsuccessfulDeleteAccountTest() {
         Response response = step("Отправить запрос на удаление счета с ID1", () ->
@@ -362,6 +380,7 @@ public class AccountControllerTests extends TestBase {
     }
 
     @Test
+    @Story("Удаление счета")
     @DisplayName("Неуспешное удаление несуществующего счета, 404 - Not Found")
     void unsuccessfulDeleteNonExistentAccountTest() {
         String randomId = getRandomId();
@@ -378,6 +397,7 @@ public class AccountControllerTests extends TestBase {
     }
 
     @Test
+    @Story("Получение истории транзакций")
     @DisplayName("Неуспешное получение истории транзакций по ID, 404 - Not Found")
     void unsuccessfulGettingAccountTransactionsByIdTest() {
         String randomId = getRandomId();
