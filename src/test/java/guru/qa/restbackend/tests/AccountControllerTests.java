@@ -65,7 +65,7 @@ public class AccountControllerTests extends TestBase {
                 .spec(baseRespSpec(200))
                 .extract().response();
 
-        assertThat(response.jsonPath().getLong("id")).isEqualTo(account.getId());
+        assertThat(getAccountIdAsLong(response)).isEqualTo(account.getId());
         assertThat(response.jsonPath().getString("accountNumber")).isEqualTo(account.getAccountNumber());
         assertThat(getBalanceFromResponse(response)).isEqualByComparingTo(account.getBalance());
         assertThat(response.jsonPath().getString("currency")).isEqualTo(account.getCurrency());

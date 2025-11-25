@@ -52,4 +52,8 @@ public class ResponseHelpers {
     public static String getAccountId(Response response) {
         return response.jsonPath().getString("id");
     }
+
+    public static Long getAccountIdAsLong(Response response) {
+        return response.jsonPath().getLong("id");
+    }
 }
