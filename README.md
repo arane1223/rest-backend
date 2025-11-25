@@ -15,13 +15,13 @@
 ```
 src/
 ├── main/
-│ └── java/guru/qa/restbackend/
+│   └── java/guru/qa/restbackend/
 │       ├── RestBackendApplication.java
 │       ├── controller/
 │       ├── domain/
 │       ├── exception/
 │       └── service/
-│ └── resources/
+│   └── resources/
 │       └── application.properties
 └── test/
     └── java/guru/qa/restbackend/
